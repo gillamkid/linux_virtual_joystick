@@ -7,31 +7,34 @@ use evdev::{
     AbsInfo, AbsoluteAxisType, AttributeSet, EventType, InputEvent, Key, UinputAbsSetup,
 };
 
-const SLIDER_AXES: [(AbsoluteAxisType, &str); 8] = [
-    (AbsoluteAxisType::ABS_X, "Left Joystick X"),
-    (AbsoluteAxisType::ABS_Y, "Left Joystick Y"),
-    (AbsoluteAxisType::ABS_RX, "Right Joystick X"),
-    (AbsoluteAxisType::ABS_RY, "Right Joystick Y"),
-    (AbsoluteAxisType::ABS_HAT0X, "Left Hat X"),
-    (AbsoluteAxisType::ABS_HAT0Y, "Left Hat Y"),
-    (AbsoluteAxisType::ABS_HAT1X, "Left Index X"),
-    (AbsoluteAxisType::ABS_HAT1Y, "Right Index Y"),
+const RIGHT_START: i32 = 780;
+
+const SLIDER_AXES: [(AbsoluteAxisType, &str, i32, i32); 8] = [
+    (AbsoluteAxisType::ABS_X, "Joystick X", 0, 160),
+    (AbsoluteAxisType::ABS_Y, "Joystick Y", 0, 200),
+    (AbsoluteAxisType::ABS_RX, "Joystick X", RIGHT_START, 160),
+    (AbsoluteAxisType::ABS_RY, "Joystick Y", RIGHT_START, 200),
+    (AbsoluteAxisType::ABS_HAT0X, "Hat X", 0, 280),
+    (AbsoluteAxisType::ABS_HAT0Y, "Hat Y", 0, 320),
+    (AbsoluteAxisType::ABS_HAT1X, "Index", 0, 0),
+    (AbsoluteAxisType::ABS_HAT1Y, "Index", RIGHT_START, 0),
 ];
 
-const BUTTONS: [(Key, &str); 13] = [
-    (Key::BTN_SOUTH, " A (South)"),
-    (Key::BTN_EAST, "B (East)"),
-    (Key::BTN_WEST, "Y (West)"),
-    (Key::BTN_NORTH, "X North"),
-    (Key::BTN_TL, "LT"),
-    (Key::BTN_TR, "RT"),
-    (Key::BTN_TL2, "LB"),
-    (Key::BTN_TR2, "RB"),
-    (Key::BTN_SELECT, "Select / View"),
-    (Key::BTN_START, "Menu / Start"),
-    (Key::BTN_THUMBL, "Left Thumbstick"),
-    (Key::BTN_THUMBR, "Right Thumbstick"),
-    (Key::BTN_MODE, "Mode"),
+const BUTTONS: [(Key, &str, i32, i32); 13] = [
+    (Key::BTN_SOUTH, "A", RIGHT_START, 280),     
+    (Key::BTN_EAST, "B", RIGHT_START, 320),
+    (Key::BTN_TL, "LT", 0, 120),
+    (Key::BTN_TR, "RT", RIGHT_START, 120),
+    (Key::BTN_TL2, "LB", 0, 40),
+    (Key::BTN_TR2, "RB", RIGHT_START, 40),
+    (Key::BTN_THUMBL, "Hat Press", 0, 360),
+
+    (Key::BTN_WEST, "Y", 200, 440),
+    (Key::BTN_NORTH, "X", 200, 480),
+    (Key::BTN_SELECT, "Select / View", 400, 440),
+    (Key::BTN_START, "Menu / Start", 400, 480),
+    (Key::BTN_THUMBR, "Right Thumbstick", 600, 440),
+    (Key::BTN_MODE, "Mode", 600, 480),
 ];
 
 pub type AnalogAxis = Control<i8>;
@@ -46,17 +49,17 @@ pub fn build_uninput() -> anyhow::Result<(Box<[AnalogAxis]>, Box<[Button]>)> {
 
     let abs_setup = AbsInfo::new(0, -100, 100, 0, 0, 1);
     let mut axes = Vec::with_capacity(SLIDER_AXES.len());
-    for (axis, name) in SLIDER_AXES {
+    for (axis, name, pos_x, pos_y) in SLIDER_AXES {
         let axis = UinputAbsSetup::new(axis, abs_setup);
         device = device.with_absolute_axis(&axis)?;
-        axes.push(AnalogAxis::new(axis.code(), event_sender.clone(), name))
+        axes.push(AnalogAxis::new(axis.code(), event_sender.clone(), name, pos_x, pos_y))
     }
 
     let mut buttons = Vec::with_capacity(SLIDER_AXES.len());
     let mut keys = AttributeSet::<Key>::new();
-    for (button, name) in BUTTONS {
+    for (button, name, pos_x, pos_y) in BUTTONS {
         keys.insert(button);
-        buttons.push(Button::new(button.code(), event_sender.clone(), name))
+        buttons.push(Button::new(button.code(), event_sender.clone(), name, pos_x, pos_y))
     }
     let device = device.with_keys(&keys)?;
 
@@ -76,6 +79,8 @@ pub struct Control<T: Default + PartialEq + Clone + ControllerValue + Debug> {
     pub new_value: T,
     event_sender: mpsc::Sender<InputEvent>,
     name: &'static str,
+    pub pos_x: i32,
+    pub pos_y: i32,
 }
 
 impl<T: Default + PartialEq + ControllerValue + Clone + Debug> Control<T> {
@@ -83,6 +88,8 @@ impl<T: Default + PartialEq + ControllerValue + Clone + Debug> Control<T> {
         event_code: EventCode,
         event_sender: mpsc::Sender<InputEvent>,
         name: &'static str,
+        pos_x: i32,
+        pos_y: i32,
     ) -> Self {
         Self {
             event_code,
@@ -90,6 +97,8 @@ impl<T: Default + PartialEq + ControllerValue + Clone + Debug> Control<T> {
             new_value: T::default(),
             event_sender,
             name,
+            pos_x,
+            pos_y,
         }
     }
 
