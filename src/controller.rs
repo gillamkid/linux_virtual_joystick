@@ -7,13 +7,15 @@ use evdev::{
     AbsInfo, AbsoluteAxisType, AttributeSet, EventType, InputEvent, Key, UinputAbsSetup,
 };
 
-const SLIDER_AXES: [(AbsoluteAxisType, &str); 6] = [
-    (AbsoluteAxisType::ABS_X, "Left X"),
-    (AbsoluteAxisType::ABS_Y, "Left Y"),
-    (AbsoluteAxisType::ABS_RX, "Right X"),
-    (AbsoluteAxisType::ABS_RY, "Right Y"),
-    (AbsoluteAxisType::ABS_THROTTLE, "Throttle"),
-    (AbsoluteAxisType::ABS_BRAKE, "Break"),
+const SLIDER_AXES: [(AbsoluteAxisType, &str); 8] = [
+    (AbsoluteAxisType::ABS_X, "Left Joystick X"),
+    (AbsoluteAxisType::ABS_Y, "Left Joystick Y"),
+    (AbsoluteAxisType::ABS_RX, "Right Joystick X"),
+    (AbsoluteAxisType::ABS_RY, "Right Joystick Y"),
+    (AbsoluteAxisType::ABS_HAT0X, "Left Hat X"),
+    (AbsoluteAxisType::ABS_HAT0Y, "Left Hat Y"),
+    (AbsoluteAxisType::ABS_HAT1X, "Left Index X"),
+    (AbsoluteAxisType::ABS_HAT1Y, "Right Index Y"),
 ];
 
 const BUTTONS: [(Key, &str); 13] = [
