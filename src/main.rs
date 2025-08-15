@@ -52,7 +52,7 @@ impl eframe::App for UI {
             // Draw picture at top
             let scale = 1.0;
             let size = self.texture.size_vec2() * scale;
-            let pos = egui::pos2(210.0, 0.0);
+            let pos = egui::pos2(220.0, 0.0);
                 let rect = egui::Rect::from_min_size(pos, size);
             ui.put(
                 rect,
@@ -66,7 +66,12 @@ impl eframe::App for UI {
                 let pos = egui::pos2(axis.pos_x as f32, axis.pos_y as f32);
                 let rect = egui::Rect::from_min_size(pos, egui::vec2(200.0, 30.0));
                 let slider = egui::Slider::new(&mut axis.new_value, -100..=100).text(name);
-                ui.put(rect, slider);
+                let response = ui.put(rect, slider);
+
+                // If the slider is NOT active (being dragged), move toward center
+                if axis.new_value != 0 && !response.is_pointer_button_down_on()  {
+                    axis.new_value = 0;
+                }
             }
 
             // Your existing button checkboxes

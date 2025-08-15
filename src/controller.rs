@@ -8,26 +8,27 @@ use evdev::{
 };
 
 const RIGHT_START: i32 = 780;
+const LEFT_START: i32 = 10;
 
 const SLIDER_AXES: [(AbsoluteAxisType, &str, i32, i32); 8] = [
-    (AbsoluteAxisType::ABS_X, "Joystick X", 0, 160),
-    (AbsoluteAxisType::ABS_Y, "Joystick Y", 0, 200),
+    (AbsoluteAxisType::ABS_X, "Joystick X", LEFT_START, 160),
+    (AbsoluteAxisType::ABS_Y, "Joystick Y", LEFT_START, 200),
     (AbsoluteAxisType::ABS_RX, "Joystick X", RIGHT_START, 160),
     (AbsoluteAxisType::ABS_RY, "Joystick Y", RIGHT_START, 200),
-    (AbsoluteAxisType::ABS_HAT0X, "Hat X", 0, 280),
-    (AbsoluteAxisType::ABS_HAT0Y, "Hat Y", 0, 320),
-    (AbsoluteAxisType::ABS_HAT1X, "Index", 0, 0),
+    (AbsoluteAxisType::ABS_HAT0X, "Hat X", LEFT_START, 280),
+    (AbsoluteAxisType::ABS_HAT0Y, "Hat Y", LEFT_START, 320),
+    (AbsoluteAxisType::ABS_HAT1X, "Index", LEFT_START, 0),
     (AbsoluteAxisType::ABS_HAT1Y, "Index", RIGHT_START, 0),
 ];
 
 const BUTTONS: [(Key, &str, i32, i32); 13] = [
     (Key::BTN_SOUTH, "A", RIGHT_START, 280),     
     (Key::BTN_EAST, "B", RIGHT_START, 320),
-    (Key::BTN_TL, "LT", 0, 120),
+    (Key::BTN_TL, "LT", LEFT_START, 120),
     (Key::BTN_TR, "RT", RIGHT_START, 120),
-    (Key::BTN_TL2, "LB", 0, 40),
+    (Key::BTN_TL2, "LB", LEFT_START, 40),
     (Key::BTN_TR2, "RB", RIGHT_START, 40),
-    (Key::BTN_THUMBL, "Hat Press", 0, 360),
+    (Key::BTN_THUMBL, "Hat Press", LEFT_START, 360),
 
     (Key::BTN_WEST, "Y", 200, 440),
     (Key::BTN_NORTH, "X", 200, 480),
