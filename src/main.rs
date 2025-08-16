@@ -64,11 +64,31 @@ impl eframe::App for UI {
             for axis in self.axes.iter_mut() {
                 let name = axis.name();
                 let pos = egui::pos2(axis.pos_x as f32, axis.pos_y as f32);
-                let rect = egui::Rect::from_min_size(pos, egui::vec2(200.0, 30.0));
-                let slider = egui::Slider::new(&mut axis.new_value, -100..=100).text(name);
+
+                let is_y = name.contains(" Y");
+
+                // choose size depending on whether it is a Y axis
+                let size = if is_y {
+                    // narrow and tall  → vertical slider
+                    egui::vec2(30.0, 200.0)
+                } else {
+                    // wide and short  → horizontal slider
+                    egui::vec2(200.0, 30.0)
+                };
+
+                let rect = egui::Rect::from_min_size(pos, size);
+
+                // build slider
+                let mut slider = egui::Slider::new(&mut axis.new_value, -100..=100).text(name);
+
+                // make it vertical only for Y
+                if is_y {
+                    slider = slider.vertical();
+                }
+
                 let response = ui.put(rect, slider);
 
-                // If the slider is NOT active (being dragged), move toward center
+                // recenter when not interacted with
                 if axis.new_value != 0 && !response.is_pointer_button_down_on()  {
                     axis.new_value = 0;
                 }
