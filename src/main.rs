@@ -27,11 +27,12 @@ struct UI {
     img: TextureHandle,
 }
 
+const PNG_DATA: &[u8] = include_bytes!("sroc.png");
+
 impl UI {
     pub fn new(cc: &eframe::CreationContext<'_>, axes: Box<[controller::AnalogAxis]>, buttons: Box<[controller::Button]>) -> Self {
         // create img
-        let image_bytes = std::fs::read("src/sroc.png").expect("Failed to read image");
-        let dyn_image = image::load_from_memory(&image_bytes).expect("Failed to load image");
+        let dyn_image = image::load_from_memory(&PNG_DATA).expect("Failed to load image");
         let size = [dyn_image.width() as _, dyn_image.height() as _];
         let rgba = dyn_image.to_rgba8();
         let pixels = rgba.as_flat_samples();
