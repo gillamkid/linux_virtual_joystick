@@ -6,12 +6,12 @@ mod controller;
 fn main() -> anyhow::Result<()> {
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([1000.0, 500.0]), // Set width and height
+            .with_inner_size([860.0, 430.0]), // Set width and height
         ..Default::default()
     };
 
     eframe::run_native(
-        "Linux Virtual Joystick",
+        "Virtual UXV SRoC",
         native_options,
         Box::new(|cc| {
             let (axes, buttons) = controller::build_uninput().unwrap();
@@ -23,83 +23,67 @@ fn main() -> anyhow::Result<()> {
 
 struct UI {
     axes: Box<[controller::AnalogAxis]>,
-    button: Box<[controller::Button]>,
-    texture: TextureHandle,
+    buttons: Box<[controller::Button]>,
+    img: TextureHandle,
 }
 
 impl UI {
-    pub fn new(cc: &eframe::CreationContext<'_>, axes: Box<[controller::AnalogAxis]>, button: Box<[controller::Button]>) -> Self {
-        // Load image from file
+    pub fn new(cc: &eframe::CreationContext<'_>, axes: Box<[controller::AnalogAxis]>, buttons: Box<[controller::Button]>) -> Self {
+        // create img
         let image_bytes = std::fs::read("src/sroc.png").expect("Failed to read image");
         let dyn_image = image::load_from_memory(&image_bytes).expect("Failed to load image");
-
-        // Convert to egui image format
         let size = [dyn_image.width() as _, dyn_image.height() as _];
         let rgba = dyn_image.to_rgba8();
         let pixels = rgba.as_flat_samples();
         let color_image = ColorImage::from_rgba_unmultiplied(size, pixels.as_slice());
+        let img = cc.egui_ctx.load_texture("img", color_image, Default::default());
 
-        // Create a texture
-        let texture = cc.egui_ctx.load_texture("controller_image", color_image, Default::default());
-
-        Self { axes, button, texture }
+        Self { axes, buttons, img }
     }
 }
 
 impl eframe::App for UI {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            // Draw picture at top
-            let scale = 1.0;
-            let size = self.texture.size_vec2() * scale;
-            let pos = egui::pos2(220.0, 0.0);
-                let rect = egui::Rect::from_min_size(pos, size);
+            // picture of the controller
             ui.put(
-                rect,
-                egui::Image::new(&self.texture)
-                    .fit_to_exact_size(size)
+                egui::Rect::from_min_size(egui::pos2(150.0, 40.0), self.img.size_vec2()),
+                egui::Image::new(&self.img)
             );
 
-            // Your existing axis sliders
             for axis in self.axes.iter_mut() {
-                let name = axis.name();
                 let pos = egui::pos2(axis.pos_x as f32, axis.pos_y as f32);
 
-                let is_y = name.contains(" Y");
+                let is_vertical_slider = axis.name().contains(" Y");
 
-                // choose size depending on whether it is a Y axis
-                let size = if is_y {
-                    // narrow and tall  → vertical slider
+                let size = if is_vertical_slider {
                     egui::vec2(30.0, 200.0)
                 } else {
-                    // wide and short  → horizontal slider
                     egui::vec2(200.0, 30.0)
                 };
 
                 let rect = egui::Rect::from_min_size(pos, size);
 
-                // build slider
-                let mut slider = egui::Slider::new(&mut axis.new_value, -100..=100).text(name);
+                let mut slider = egui::Slider::new(&mut axis.new_value, -100..=100).show_value(false);
 
-                // make it vertical only for Y
-                if is_y {
+                if is_vertical_slider {
                     slider = slider.vertical();
                 }
 
                 let response = ui.put(rect, slider);
 
-                // recenter when not interacted with
+                // recenter sliders if the mouse press has been released
                 if axis.new_value != 0 && !response.is_pointer_button_down_on()  {
                     axis.new_value = 0;
                 }
             }
 
             // Your existing button checkboxes
-            for button in self.button.iter_mut() {
-                let name = button.name();
-                let pos = egui::pos2(button.pos_x as f32, button.pos_y as f32);
+            for btn in self.buttons.iter_mut() {
+                let name = btn.name();
+                let pos = egui::pos2(btn.pos_x as f32, btn.pos_y as f32);
                 let rect = egui::Rect::from_min_size(pos, egui::vec2(150.0, 20.0));
-                let checkbox = egui::Checkbox::new(&mut button.new_value, name);
+                let checkbox = egui::Checkbox::new(&mut btn.new_value, name);
                 ui.put(rect, checkbox);
             }
         });
@@ -108,8 +92,8 @@ impl eframe::App for UI {
         for axis in self.axes.iter_mut() {
             axis.new_value();
         }
-        for button in self.button.iter_mut() {
-            button.new_value();
+        for btn in self.buttons.iter_mut() {
+            btn.new_value();
         }
     }
 }

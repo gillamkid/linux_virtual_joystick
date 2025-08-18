@@ -1,41 +1,32 @@
 use std::fmt::Debug;
-
 use std::sync::mpsc;
-
 use evdev::{
     uinput::{VirtualDevice, VirtualDeviceBuilder},
     AbsInfo, AbsoluteAxisType, AttributeSet, EventType, InputEvent, Key, UinputAbsSetup,
 };
 
-const RIGHT_START: i32 = 780;
+const RIGHT_START: i32 = 720;
 const LEFT_START: i32 = 10;
 
 const SLIDER_AXES: [(AbsoluteAxisType, &str, i32, i32); 8] = [
-    (AbsoluteAxisType::ABS_X, "Joystick X", LEFT_START, 160),
-    (AbsoluteAxisType::ABS_Y, "Joystick Y", LEFT_START, 200),
-    (AbsoluteAxisType::ABS_RX, "Joystick X", RIGHT_START, 160),
-    (AbsoluteAxisType::ABS_RY, "Joystick Y", RIGHT_START, 200),
-    (AbsoluteAxisType::ABS_HAT0X, "Hat X", LEFT_START, 280),
-    (AbsoluteAxisType::ABS_HAT0Y, "Hat Y", LEFT_START, 320),
-    (AbsoluteAxisType::ABS_HAT1X, "Index", LEFT_START, 0),
-    (AbsoluteAxisType::ABS_HAT1Y, "Index", RIGHT_START, 0),
+    (AbsoluteAxisType::ABS_X, "Left Joystick X", LEFT_START + 30, 190),
+    (AbsoluteAxisType::ABS_Y, "Left Joystick Y", LEFT_START, 155),
+    (AbsoluteAxisType::ABS_RX, "Right Joystick X", RIGHT_START, 190),
+    (AbsoluteAxisType::ABS_RY, "Right Joystick Y", RIGHT_START + 110, 155),
+    (AbsoluteAxisType::ABS_HAT0X, "Left Hat X", LEFT_START + 40, 340),
+    (AbsoluteAxisType::ABS_HAT0Y, "Left Hat Y", LEFT_START + 10, 305),
+    (AbsoluteAxisType::ABS_HAT1X, "Left Trigger", LEFT_START + 160, 5),
+    (AbsoluteAxisType::ABS_HAT1Y, "Right Trigger", RIGHT_START - 140, 5),
 ];
 
-const BUTTONS: [(Key, &str, i32, i32); 13] = [
-    (Key::BTN_SOUTH, "A", RIGHT_START, 280),     
-    (Key::BTN_EAST, "B", RIGHT_START, 320),
-    (Key::BTN_TL, "LT", LEFT_START, 120),
-    (Key::BTN_TR, "RT", RIGHT_START, 120),
-    (Key::BTN_TL2, "LB", LEFT_START, 40),
-    (Key::BTN_TR2, "RB", RIGHT_START, 40),
-    (Key::BTN_THUMBL, "Hat Press", LEFT_START, 360),
-
-    (Key::BTN_WEST, "Y", 200, 440),
-    (Key::BTN_NORTH, "X", 200, 480),
-    (Key::BTN_SELECT, "Select / View", 400, 440),
-    (Key::BTN_START, "Menu / Start", 400, 480),
-    (Key::BTN_THUMBR, "Right Thumbstick", 600, 440),
-    (Key::BTN_MODE, "Mode", 600, 480),
+const BUTTONS: [(Key, &str, i32, i32); 7] = [
+    (Key::BTN_SOUTH, "A", RIGHT_START - 55, 240),     
+    (Key::BTN_EAST, "B", RIGHT_START - 60, 280),
+    (Key::BTN_TL, "LB", LEFT_START + 40, 140),
+    (Key::BTN_TR, "RB", RIGHT_START - 50, 140),
+    (Key::BTN_TL2, "LT", LEFT_START + 60, 80),
+    (Key::BTN_TR2, "RT", RIGHT_START - 70, 80),
+    (Key::BTN_THUMBL, "Hat Press", LEFT_START + 10, 320),
 ];
 
 pub type AnalogAxis = Control<i8>;
@@ -44,14 +35,12 @@ pub type Button = Control<bool>;
 pub type EventCode = u16;
 
 pub fn build_uninput() -> anyhow::Result<(Box<[AnalogAxis]>, Box<[Button]>)> {
-    let mut device = VirtualDeviceBuilder::new()?.name("Linux Virtual Joystick");
-
+    let mut device = VirtualDeviceBuilder::new()?.name("Virtual UXV SRoC");
     let (event_sender, event_recv) = mpsc::channel();
 
-    let abs_setup = AbsInfo::new(0, -100, 100, 0, 0, 1);
     let mut axes = Vec::with_capacity(SLIDER_AXES.len());
     for (axis, name, pos_x, pos_y) in SLIDER_AXES {
-        let axis = UinputAbsSetup::new(axis, abs_setup);
+        let axis = UinputAbsSetup::new(axis, AbsInfo::new(0, -100, 100, 0, 0, 1));
         device = device.with_absolute_axis(&axis)?;
         axes.push(AnalogAxis::new(axis.code(), event_sender.clone(), name, pos_x, pos_y))
     }
@@ -65,9 +54,7 @@ pub fn build_uninput() -> anyhow::Result<(Box<[AnalogAxis]>, Box<[Button]>)> {
     let device = device.with_keys(&keys)?;
 
     let device = device.build()?;
-
     std::thread::spawn(|| device_thread(device, event_recv));
-
     Ok((axes.into_boxed_slice(), buttons.into_boxed_slice()))
 }
 
