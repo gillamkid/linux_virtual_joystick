@@ -14,16 +14,37 @@ sudo chmod +x linux_virtual_joystick.AppImage
 sudo ./linux_virtual_joystick.AppImage
 ```
 
-## Doing a Local Build
-To compile from source you will need [cargo and rust](https://www.rust-lang.org/tools/install).To install from source clone this repository and `cargo build`.
-To start the program `sudo -E ~/.cargo/bin/cargo run`.
-
-## Build an Appimage
+## Build from Source
 ```
+# dependencies
+sudo apt install git curl build-essential -y
+
+# this installs rust/cargo as instructed on https://www.rust-lang.org/tools/install
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# restart terminal so cargo is added to PATH
+
+# get source code
+git clone https://github.com/gillamkid/linux_virtual_joystick.git
+cd linux_virtual_joystick
+
+# build and run
+cargo build
+sudo -E ~/.cargo/bin/cargo run
+```
+
+#### Build an Appimage
+```
+# dependencies
 cargo install cargo-appimage
 wget https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-x86_64.AppImage
 sudo mv appimagetool-x86_64.AppImage /usr/local/bin/appimagetool
+sudo chmod +x /usr/local/bin/appimagetool
+
+# build
 sudo -E ~/.cargo/bin/cargo appimage
+
+# the appimage can be found at target/appimage/linux_virtual_joystick.AppImage
 ```
 
 ## Notes
