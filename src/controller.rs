@@ -13,10 +13,10 @@ const SLIDER_AXES: [(AbsoluteAxisType, &str, i32, i32); 8] = [
     (AbsoluteAxisType::ABS_Y, "Left Joystick Y", LEFT_START, 155),
     (AbsoluteAxisType::ABS_RX, "Right Joystick X", RIGHT_START, 190),
     (AbsoluteAxisType::ABS_RY, "Right Joystick Y", RIGHT_START + 110, 155),
-    (AbsoluteAxisType::ABS_HAT0X, "Left Hat X", LEFT_START + 40, 340),
-    (AbsoluteAxisType::ABS_HAT0Y, "Left Hat Y", LEFT_START + 10, 305),
-    (AbsoluteAxisType::ABS_HAT1X, "Left Trigger", LEFT_START + 160, 5),
-    (AbsoluteAxisType::ABS_HAT1Y, "Right Trigger", RIGHT_START - 140, 5),
+    (AbsoluteAxisType::ABS_HAT1X, "Left Hat X", LEFT_START + 40, 340),
+    (AbsoluteAxisType::ABS_HAT1Y, "Left Hat Y", LEFT_START + 10, 305),
+    (AbsoluteAxisType::ABS_THROTTLE, "Left Trigger", LEFT_START + 160, 5),
+    (AbsoluteAxisType::ABS_RUDDER, "Right Trigger", RIGHT_START - 140, 5),
 ];
 
 const BUTTONS: [(Key, &str, i32, i32); 7] = [
