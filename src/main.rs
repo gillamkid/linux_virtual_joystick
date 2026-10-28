@@ -6,6 +6,7 @@ mod controller;
 mod function_keys;
 mod gamepads;
 mod hover;
+mod theme;
 
 use controller::ControllerKind;
 use hover::controller_hovered;
@@ -23,8 +24,9 @@ fn main() -> anyhow::Result<()> {
         "Virtual Controller",
         options,
         Box::new(move |cc| {
-            cc.egui_ctx.set_visuals(egui::Visuals::dark());
+            theme::Theme::Dark.apply(&cc.egui_ctx);
             Box::new(UI {
+                theme: theme::Theme::Dark,
                 menu_open: false,
                 github_logo: artwork::github_logo(&cc.egui_ctx),
                 resize_hover: hover::ResizeHover::default(),
@@ -47,6 +49,7 @@ fn main() -> anyhow::Result<()> {
 }
 
 struct UI {
+    theme: theme::Theme,
     menu_open: bool,
     github_logo: egui::TextureHandle,
     resize_hover: hover::ResizeHover,
@@ -833,6 +836,7 @@ impl eframe::App for UI {
                 ui.visuals_mut().widgets.hovered = ui.visuals().widgets.inactive;
             }
             let mut selected = self.kind;
+            let mut selected_theme = self.theme;
             ui.horizontal(|ui| {
                 ui.scope(|ui| {
                     let button = ui.add(
@@ -887,6 +891,25 @@ impl eframe::App for UI {
                                                     }
                                                 });
                                             ui.end_row();
+                                            ui.label("Color Theme");
+                                            egui::ComboBox::from_id_source("color-theme")
+                                                .width(360.0)
+                                                .selected_text(selected_theme.label())
+                                                .show_ui(ui, |ui| {
+                                                    ui.spacing_mut().interact_size.y = 36.0;
+                                                    ui.spacing_mut().item_spacing.y = 6.0;
+                                                    for appearance in
+                                                        [theme::Theme::Light, theme::Theme::Dark]
+                                                    {
+                                                        ui.selectable_value(
+                                                            &mut selected_theme,
+                                                            appearance,
+                                                            egui::RichText::new(appearance.label())
+                                                                .size(menu_font_size),
+                                                        );
+                                                    }
+                                                });
+                                            ui.end_row();
                                             ui.label("Version");
                                             ui.allocate_ui_with_layout(
                                                 Vec2::new(360.0, 36.0),
@@ -930,6 +953,10 @@ impl eframe::App for UI {
                     }
                 });
             });
+            if selected_theme != self.theme {
+                self.theme = selected_theme;
+                self.theme.apply(ctx);
+            }
             if selected != self.kind {
                 self.switch_controller(ctx, selected);
             }
